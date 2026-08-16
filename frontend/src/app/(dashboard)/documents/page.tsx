@@ -61,7 +61,7 @@ export default function DocumentsPage() {
     <div className="mx-auto max-w-5xl px-8 py-10">
       <h1 className="font-display text-2xl font-medium text-ink dark:text-paper">Documents</h1>
       <p className="mt-1 text-sm text-ink/55 dark:text-paper/55">
-        Upload PDFs, DOCX, TXT, or Markdown files. They're chunked and indexed automatically.
+        Upload PDFs, DOCX, TXT, or Markdown files. They&apos;re chunked and indexed automatically.
       </p>
 
       {/* Upload center */}

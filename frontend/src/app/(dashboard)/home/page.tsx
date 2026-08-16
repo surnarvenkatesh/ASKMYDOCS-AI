@@ -184,7 +184,7 @@ export default function HomePage() {
 
       {/* Use cases */}
       <div className="mt-14">
-        <p className="mb-2 font-mono text-[12px] uppercase tracking-widest text-sky-dark">Who it's for</p>
+        <p className="mb-2 font-mono text-[12px] uppercase tracking-widest text-sky-dark">Who it&apos;s for</p>
         <h2 className="font-display text-2xl font-medium text-ink dark:text-paper">A few ways teams use it.</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {USE_CASES.map((useCase) => {

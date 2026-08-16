@@ -53,11 +53,9 @@ export default function ChatPage() {
               {messages.map((m) => (
                 <MessageBubble
                   key={m.id}
-                  messageId={m.id}
                   role={m.role}
                   content={m.content}
                   citations={m.citations}
-                  feedback={m.feedback}
                 />
               ))}
               {stream.pendingQuestion && (
