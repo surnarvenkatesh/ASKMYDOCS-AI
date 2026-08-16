@@ -1,0 +1,52 @@
+{
+  "family": "askmydocs-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/askmydocsBackendTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/askmydocs-backend:latest",
+      "portMappings": [{ "containerPort": 8000, "protocol": "tcp" }],
+      "essential": true,
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "environment": [
+        { "name": "APP_ENV", "value": "production" },
+        { "name": "LLM_PROVIDER", "value": "openai" }
+      ],
+      "secrets": [
+        { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:askmydocs/database-url" },
+        { "name": "REDIS_URL", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:askmydocs/redis-url" },
+        { "name": "JWT_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:askmydocs/jwt-secret" },
+        { "name": "OPENAI_API_KEY", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:askmydocs/openai-api-key" }
+      ],
+      "mountPoints": [{ "sourceVolume": "storage", "containerPath": "/app/storage" }],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/askmydocs-backend",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "backend"
+        }
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "storage",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-XXXXXXXX",
+        "transitEncryption": "ENABLED"
+      }
+    }
+  ]
+}

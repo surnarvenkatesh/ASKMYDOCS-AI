@@ -1,0 +1,43 @@
+# ---- Python / Backend ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ---- Node / Frontend ----
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.turbo/
+*.tsbuildinfo
+npm-debug.log*
+
+# ---- Data / Storage ----
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep
+backend/storage/vector_store/*
+!backend/storage/vector_store/.gitkeep
+backend/logs/*
+!backend/logs/.gitkeep
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Docker ----
+*.pid

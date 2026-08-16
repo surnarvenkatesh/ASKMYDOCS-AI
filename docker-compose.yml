@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: askmydocs-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - askmydocs_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - askmydocs-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: askmydocs-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - askmydocs_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - askmydocs-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: askmydocs-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - askmydocs_uploads:/app/storage/uploads
+      - askmydocs_vector_store:/app/storage/vector_store
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - askmydocs-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: askmydocs-frontend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - askmydocs-net
+
+volumes:
+  askmydocs_pg_data:
+  askmydocs_redis_data:
+  askmydocs_uploads:
+  askmydocs_vector_store:
+
+networks:
+  askmydocs-net:
+    driver: bridge

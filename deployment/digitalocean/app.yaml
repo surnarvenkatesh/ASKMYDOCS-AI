@@ -1,0 +1,50 @@
+name: askmydocs-ai
+region: nyc
+
+services:
+  - name: backend
+    dockerfile_path: backend/Dockerfile
+    source_dir: backend
+    http_port: 8000
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 20
+    instance_count: 1
+    instance_size_slug: professional-s
+    envs:
+      - key: APP_ENV
+        value: production
+      - key: LLM_PROVIDER
+        value: openai
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        type: SECRET
+      - key: REDIS_URL
+        value: ${redis.DATABASE_URL}
+        type: SECRET
+      - key: JWT_SECRET_KEY
+        type: SECRET
+      - key: OPENAI_API_KEY
+        type: SECRET
+    run_command: "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  - name: frontend
+    dockerfile_path: frontend/Dockerfile
+    source_dir: frontend
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xs
+    envs:
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: ${backend.PUBLIC_URL}/api/v1
+
+databases:
+  - name: db
+    engine: PG
+    version: "16"
+    production: true
+
+  - name: redis
+    engine: REDIS
+    version: "7"
+    production: true

@@ -1,0 +1,50 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+psycopg2-binary==2.9.10
+
+# Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+python-multipart==0.0.20
+
+# Redis / caching
+redis==5.2.1
+
+# AI / RAG stack
+langchain==0.3.13
+langchain-community==0.3.13
+llama-index==0.12.9
+faiss-cpu==1.14.3
+rank-bm25==0.2.2
+sentence-transformers==3.3.1
+transformers==4.47.1
+openai==1.58.1
+
+# Document processing
+pypdf==5.1.0
+python-docx==1.1.2
+markdown==3.7
+
+# Evaluation
+ragas==0.2.9
+deepeval==2.1.9
+
+# Utilities
+httpx==0.28.1
+tenacity==9.0.0
+python-dotenv==1.0.1
+structlog==24.4.0
+orjson==3.10.12
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+httpx==0.28.1
+faker==33.1.0

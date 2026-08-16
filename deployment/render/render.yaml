@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: askmydocs-backend
+    runtime: docker
+    dockerfilePath: ../../backend/Dockerfile
+    dockerContext: ../../backend
+    plan: standard
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: askmydocs-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: askmydocs-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+    disk:
+      name: askmydocs-storage
+      mountPath: /app/storage
+      sizeGB: 10
+
+  - type: web
+    name: askmydocs-frontend
+    runtime: docker
+    dockerfilePath: ../../frontend/Dockerfile
+    dockerContext: ../../frontend
+    plan: standard
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false
+
+databases:
+  - name: askmydocs-postgres
+    plan: standard
+    postgresMajorVersion: "16"
+
+  - name: askmydocs-redis
+    type: redis
+    plan: standard

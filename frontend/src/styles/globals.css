@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans;
+  }
+
+  ::selection {
+    @apply bg-highlighter/40;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #f5b942;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.prose-chat {
+  @apply text-[15px] leading-relaxed;
+}
+.prose-chat p {
+  @apply mb-3;
+}
+.prose-chat code {
+  @apply rounded bg-ink/5 px-1.5 py-0.5 font-mono text-[13px];
+}
+.prose-chat pre {
+  @apply rounded-card bg-ink text-paper p-4 overflow-x-auto text-[13px] mb-3;
+}
+.prose-chat ul {
+  @apply list-disc pl-5 mb-3;
+}
+.prose-chat ol {
+  @apply list-decimal pl-5 mb-3;
+}
