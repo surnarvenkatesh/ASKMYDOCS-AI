@@ -791,4 +791,10 @@ AI / ML Engineer | Generative AI | RAG | Machine Learning
 
 ---
 
+# 📄 License
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
 > **AskMyDocs AI — Turning documents into an intelligent, searchable knowledge base.**
