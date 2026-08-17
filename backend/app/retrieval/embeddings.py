@@ -62,17 +62,23 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
 
 
 class GeminiEmbeddingProvider(EmbeddingProvider):
-    def __init__(self, model_name: str = "text-embedding-004") -> None:
+    def __init__(self, model_name: str = "gemini-embedding-001") -> None:
         from google import genai
 
         self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
         self._model_name = model_name
-        self._dimension = 768  # text-embedding-004
+        self._dimension = 768  # matches output_dimensionality set below
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        result = self._client.models.embed_content(model=self._model_name, contents=texts)
+        from google.genai import types
+
+        result = self._client.models.embed_content(
+            model=self._model_name,
+            contents=texts,
+            config=types.EmbedContentConfig(output_dimensionality=self._dimension),
+        )
         return [e.values for e in result.embeddings]
 
     @property
