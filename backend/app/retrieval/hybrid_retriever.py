@@ -41,6 +41,39 @@ class HybridRetriever:
         self._db = db
         self._embeddings = embedding_provider
 
+    async def _ensure_indexes_built(self, document_id: uuid.UUID) -> None:
+        """Rebuild the on-disk FAISS/BM25 indexes from Postgres if they're
+        missing — e.g. after a container restart on ephemeral storage,
+        where the index files never survive but chunk text does."""
+        from pathlib import Path
+
+        index_dir = Path(settings.VECTOR_STORE_PATH) / str(document_id)
+        faiss_path = index_dir / "index.faiss"
+        bm25_path = index_dir / "bm25.pkl"
+
+        if faiss_path.exists() and bm25_path.exists():
+            return
+
+        result = await self._db.execute(
+            select(DocumentChunk)
+            .where(DocumentChunk.document_id == document_id)
+            .order_by(DocumentChunk.chunk_index)
+        )
+        chunks = result.scalars().all()
+        if not chunks:
+            return
+
+        texts = [c.content for c in chunks]
+        vectors = self._embeddings.embed_documents(texts)
+
+        vector_store = VectorStore(document_id, dimension=self._embeddings.dimension)
+        vector_ids = vector_store.add(vectors)
+        vector_store.persist()
+
+        bm25_index = BM25Index(document_id)
+        bm25_index.build(texts, vector_ids)
+        bm25_index.persist()
+
     async def retrieve(
         self,
         query: str,
@@ -56,6 +89,8 @@ class HybridRetriever:
         query_embedding = self._embeddings.embed_query(query)
 
         for document_id in document_ids:
+            await self._ensure_indexes_built(document_id)
+
             bm25_hits = BM25Index(document_id).search(query, top_k=settings.BM25_TOP_K)
             bm25_ranked.extend((document_id, vid) for vid, _ in bm25_hits)
 
