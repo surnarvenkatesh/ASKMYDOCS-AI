@@ -61,9 +61,30 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
         return self._dimension
 
 
+class GeminiEmbeddingProvider(EmbeddingProvider):
+    def __init__(self, model_name: str = "text-embedding-004") -> None:
+        from google import genai
+
+        self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        self._model_name = model_name
+        self._dimension = 768  # text-embedding-004
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        result = self._client.models.embed_content(model=self._model_name, contents=texts)
+        return [e.values for e in result.embeddings]
+
+    @property
+    def dimension(self) -> int:
+        return self._dimension
+
+
 @lru_cache
 def get_embedding_provider() -> EmbeddingProvider:
     """Process-wide singleton so the model is loaded exactly once."""
     if settings.EMBEDDING_PROVIDER == "openai":
         return OpenAIEmbeddingProvider()
+    if settings.EMBEDDING_PROVIDER == "gemini":
+        return GeminiEmbeddingProvider()
     return HuggingFaceEmbeddingProvider()
