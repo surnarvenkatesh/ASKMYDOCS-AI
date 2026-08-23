@@ -52,7 +52,7 @@ class Settings(BaseSettings):
 
     # ---- Groq (OpenAI-compatible, fast hosted inference) ----
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
 
     # ---- Embeddings ----
     EMBEDDING_PROVIDER: str = "huggingface"
