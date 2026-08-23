@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://ollama:11434"
     OLLAMA_MODEL: str = "llama3.1"
 
+    # ---- Groq (OpenAI-compatible, fast hosted inference) ----
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
     # ---- Embeddings ----
     EMBEDDING_PROVIDER: str = "huggingface"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"

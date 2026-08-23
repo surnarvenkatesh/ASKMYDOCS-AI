@@ -70,7 +70,32 @@ class OllamaLLMProvider(LLMProvider):
                         yield content
 
 
+class GroqLLMProvider(LLMProvider):
+    def __init__(self, model: str = settings.GROQ_MODEL) -> None:
+        from openai import AsyncOpenAI
+
+        self._client = AsyncOpenAI(api_key=settings.GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
+        self._model = model
+
+    async def stream(self, system_prompt: str, user_prompt: str) -> AsyncIterator[str]:
+        stream = await self._client.chat.completions.create(
+            model=self._model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            stream=True,
+            temperature=0.2,
+        )
+        async for event in stream:
+            delta = event.choices[0].delta.content
+            if delta:
+                yield delta
+
+
 def get_llm_provider() -> LLMProvider:
     if settings.LLM_PROVIDER == "openai":
         return OpenAILLMProvider()
+    if settings.LLM_PROVIDER == "groq":
+        return GroqLLMProvider()
     return OllamaLLMProvider()
