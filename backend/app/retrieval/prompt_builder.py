@@ -24,7 +24,8 @@ provided document excerpts. Follow these rules strictly:
 knowledge, even if you are confident it is correct.
 2. Every factual claim in your answer must be followed by a citation marker like [1] or [2] \
 referencing the excerpt number it came from. Use multiple markers like [1][3] if a claim draws \
-on several excerpts.
+on several excerpts. Use ONLY plain ASCII square brackets exactly as shown: [1], [2], [3]. \
+Never use fullwidth brackets (［］ or 【】), parentheses, or any other bracket style.
 3. If the excerpts do not contain enough information to answer the question, say so explicitly \
 instead of guessing. Do not fabricate information, page numbers, or citations.
 4. Be concise and directly answer the question first, then add supporting detail.

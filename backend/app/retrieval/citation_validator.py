@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from app.retrieval.prompt_builder import ContextChunk
 
-_CITATION_RE = re.compile(r"\[(\d+)\]")
+_CITATION_RE = re.compile(r"[\[【](\d+)[\]】]")
 
 
 @dataclass
