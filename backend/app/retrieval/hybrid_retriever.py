@@ -23,6 +23,7 @@ from app.models.chunk import DocumentChunk
 from app.retrieval.bm25_index import BM25Index
 from app.retrieval.embeddings import EmbeddingProvider
 from app.retrieval.fusion import reciprocal_rank_fusion
+from app.retrieval.reranker import rerank
 from app.retrieval.vector_store import VectorStore
 
 CandidateKey = tuple[uuid.UUID, int]  # (document_id, vector_id)
@@ -108,22 +109,28 @@ class HybridRetriever:
         if not fused:
             return []
 
-        # Take the top-K directly from RRF fusion (no cross-encoder pass —
-        # removed to reduce memory footprint on constrained deployments).
-        top_fused = fused[:top_k]
-        candidate_keys = [key for key, _ in top_fused]
+        # Only pull chunk text for a bounded candidate pool before the
+        # (hosted, API-based) rerank pass.
+        candidate_keys = [key for key, _ in fused[: max(top_k * 4, 20)]]
         chunks_by_key = await self._load_chunks(candidate_keys)
 
+        candidates = [
+            (key, chunks_by_key[key].content)
+            for key in candidate_keys
+            if key in chunks_by_key
+        ]
+
+        reranked = rerank(query, [(i, text) for i, (_, text) in enumerate(candidates)], top_k=top_k)
+
         results: list[RetrievedChunk] = []
-        for key, rrf_score in top_fused:
-            chunk = chunks_by_key.get(key)
-            if chunk is None:
-                continue
+        for local_idx, _text, score in reranked:
+            key = candidates[local_idx][0]
+            chunk = chunks_by_key[key]
             results.append(
                 RetrievedChunk(
                     chunk=chunk,
                     document_filename=chunk.document.filename if chunk.document else "",
-                    confidence_score=_normalize_score(rrf_score),
+                    confidence_score=_normalize_score(score),
                 )
             )
         return results
@@ -161,8 +168,6 @@ def _reorder_by_relative_rank(items: list[CandidateKey]) -> list[CandidateKey]:
 
 
 def _normalize_score(raw_score: float) -> float:
-    """RRF scores are small positive values, bounded above by 2/(k+1)
-    when a chunk ranks #1 in both methods. Scale against that max."""
-    max_possible = 2.0 / (settings.RRF_K + 1)
-
-    return min(1.0, raw_score / max_possible) if max_possible > 0 else 0.0
+    """Cohere's rerank relevance_score is already a (0, 1) probability —
+    just clamp defensively in case of any edge-case values."""
+    return max(0.0, min(1.0, raw_score))

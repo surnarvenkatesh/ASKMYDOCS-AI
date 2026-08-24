@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "openai/gpt-oss-120b"
 
+    # ---- Cohere (hosted reranking, avoids loading a local cross-encoder) ----
+    COHERE_API_KEY: str = ""
+
     # ---- Embeddings ----
     EMBEDDING_PROVIDER: str = "huggingface"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
