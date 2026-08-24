@@ -11,6 +11,7 @@ DocumentChunk rows for prompt-building and citation.
 """
 from __future__ import annotations
 
+import asyncio
 import uuid
 from dataclasses import dataclass
 
@@ -120,7 +121,9 @@ class HybridRetriever:
             if key in chunks_by_key
         ]
 
-        reranked = rerank(query, [(i, text) for i, (_, text) in enumerate(candidates)], top_k=top_k)
+        reranked = await asyncio.to_thread(
+            rerank, query, [(i, text) for i, (_, text) in enumerate(candidates)], top_k=top_k
+        )
 
         results: list[RetrievedChunk] = []
         for local_idx, _text, score in reranked:
