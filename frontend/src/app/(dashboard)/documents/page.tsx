@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Check, Download, Pencil, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import { Check, Download, Loader2, Pencil, RefreshCw, Trash2, Upload, X } from "lucide-react";
 import { Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,16 +76,30 @@ export default function DocumentsPage() {
           setDragActive(false);
           handleFiles(e.dataTransfer.files);
         }}
-        onClick={() => fileInputRef.current?.click()}
-        className={`mt-6 flex cursor-pointer flex-col items-center justify-center rounded-card border-2 border-dashed px-6 py-12 text-center transition-colors ${
-          dragActive ? "border-highlighter-dark bg-highlighter-soft/40" : "border-ink/15 dark:border-ink-border hover:border-ink/25 dark:hover:border-ink-border"
+        onClick={() => !upload.isPending && fileInputRef.current?.click()}
+        className={`mt-6 flex flex-col items-center justify-center rounded-card border-2 border-dashed px-6 py-12 text-center transition-colors ${
+          upload.isPending
+            ? "cursor-not-allowed border-ink/15 dark:border-ink-border opacity-60"
+            : "cursor-pointer " +
+              (dragActive
+                ? "border-highlighter-dark bg-highlighter-soft/40"
+                : "border-ink/15 dark:border-ink-border hover:border-ink/25 dark:hover:border-ink-border")
         }`}
       >
-        <Upload className="mb-3 h-6 w-6 text-ink/40 dark:text-paper/40" />
-        <p className="text-sm text-ink/70 dark:text-paper/70">
-          <span className="font-medium text-ink dark:text-paper">Click to upload</span> or drag and drop
-        </p>
-        <p className="mt-1 text-[12px] text-ink/40 dark:text-paper/40">PDF, DOCX, TXT, or Markdown — up to 25MB</p>
+        {upload.isPending ? (
+          <>
+            <Loader2 className="mb-3 h-6 w-6 animate-spin text-highlighter-dark" />
+            <p className="text-sm text-ink/70 dark:text-paper/70">Uploading…</p>
+          </>
+        ) : (
+          <>
+            <Upload className="mb-3 h-6 w-6 text-ink/40 dark:text-paper/40" />
+            <p className="text-sm text-ink/70 dark:text-paper/70">
+              <span className="font-medium text-ink dark:text-paper">Click to upload</span> or drag and drop
+            </p>
+            <p className="mt-1 text-[12px] text-ink/40 dark:text-paper/40">PDF, DOCX, TXT, or Markdown — up to 25MB</p>
+          </>
+        )}
         <input
           ref={fileInputRef}
           type="file"
