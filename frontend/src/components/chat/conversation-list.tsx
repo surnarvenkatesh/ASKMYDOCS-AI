@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { cn, formatDate } from "@/lib/utils";
 import {
@@ -24,6 +24,8 @@ export function ConversationList({ activeId, onSelect }: ConversationListProps) 
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+
+  const deletingId = deleteConversation.isPending ? deleteConversation.variables : null;
 
   const handleCreate = async () => {
     const conversation = await createConversation.mutateAsync(undefined);
@@ -120,13 +122,21 @@ export function ConversationList({ activeId, onSelect }: ConversationListProps) 
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteConversation.mutate(c.id);
-                        if (activeId === c.id) onSelect("");
+                        deleteConversation.mutate(c.id, {
+                          onSuccess: () => {
+                            if (activeId === c.id) onSelect("");
+                          },
+                        });
                       }}
-                      className="text-ink/30 dark:text-paper/30 hover:text-danger"
+                      disabled={deletingId === c.id}
+                      className="text-ink/30 dark:text-paper/30 hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
                       aria-label="Delete conversation"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      {deletingId === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
                     </button>
                   </div>
                 </>

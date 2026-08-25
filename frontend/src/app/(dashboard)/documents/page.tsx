@@ -37,6 +37,8 @@ export default function DocumentsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
 
+  const isDeletingId = deleteDocument.isPending ? deleteDocument.variables : null;
+
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     Array.from(files).forEach((file) => upload.mutate(file));
@@ -214,9 +216,14 @@ export default function DocumentsPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteDocument.mutate(doc.id)}
+                        disabled={isDeletingId === doc.id}
                         aria-label="Delete document"
                       >
-                        <Trash2 className="h-4 w-4 text-danger" />
+                        {isDeletingId === doc.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-danger" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 text-danger" />
+                        )}
                       </Button>
                     </div>
                   </td>
