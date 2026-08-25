@@ -2,6 +2,18 @@
 
 Enterprise-grade Retrieval-Augmented Generation (RAG) platform. Upload documents (PDF, DOCX, TXT, Markdown), ask questions in natural language, and get cited, hallucination-checked answers backed by a hybrid BM25 + vector retrieval pipeline.
 
+## Live Demo
+
+| Service | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | https://askmydocs-ai-three.vercel.app |
+| Backend API | Render | https://askmydocs-ai-1.onrender.com |
+| Backend health check | Render | https://askmydocs-ai-1.onrender.com/health |
+| Database | Neon (Postgres) | — |
+| Cache | Upstash (Redis) | — |
+
+> Note: the free Render instance spins down after inactivity — the first request after idle may take ~30-50s to respond.
+
 ## The Problem
 
 Finding specific information buried in long documents — contracts, reports, research papers, internal wikis, financial filings — is slow and error-prone. Ctrl+F only works if you know the exact wording. Reading the whole document doesn't scale past a handful of files. And generic AI chatbots either can't see your private documents at all, or answer confidently without grounding their response in the actual source text — producing hallucinated facts that are hard to catch without re-reading everything yourself.
@@ -19,51 +31,47 @@ AskMyDocs AI lets you upload your own documents and ask questions in plain Engli
 - **Resumes / CVs** — quickly extract or verify details across candidate documents
 - **Study material** — ask questions against lecture notes, slides, or textbooks while studying
 
-
 ## Stack
 
 | Layer      | Tech |
 |------------|------|
 | Frontend   | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion, React Query |
 | Backend    | FastAPI, Python 3.12+, SQLAlchemy, Alembic, Pydantic v2 |
-| Data       | PostgreSQL, Redis |
-| Retrieval  | LangChain, LlamaIndex, FAISS, BM25, Sentence Transformers, Cross-Encoder re-ranking, Reciprocal Rank Fusion |
-| LLM        | OpenAI API (optional) or local Ollama |
+| Data       | PostgreSQL (Neon), Redis (Upstash) |
+| Retrieval  | FAISS, BM25, Gemini embeddings, Cohere rerank (`rerank-v3.5`), Reciprocal Rank Fusion |
+| LLM        | Groq API (Llama 3.x) — Ollama supported for local dev |
 | Evaluation | RAGAS, DeepEval |
 
 ## Project Structure
-
-```
 askmydocs-ai/
-├── backend/            # FastAPI application
-│   ├── app/
-│   │   ├── api/v1/         # Route handlers
-│   │   ├── core/           # Config, security, logging
-│   │   ├── models/         # SQLAlchemy ORM models
-│   │   ├── schemas/        # Pydantic request/response models
-│   │   ├── services/       # Business logic
-│   │   ├── repositories/   # Data access layer
-│   │   ├── ingestion/      # Document parsing & chunking
-│   │   ├── retrieval/      # Hybrid search, RRF, re-ranking
-│   │   ├── evaluation/     # RAGAS / DeepEval pipelines
-│   │   └── utils/
-│   ├── alembic/             # DB migrations
-│   └── tests/                # unit / integration / api / evaluation
-├── frontend/            # Next.js application
-│   └── src/
-│       ├── app/            # App Router pages
-│       ├── components/     # UI components
-│       ├── lib/            # API client, utils
-│       ├── hooks/          # Custom React hooks
-│       ├── types/          # Shared TypeScript types
-│       └── styles/
-├── deployment/          # Platform-specific deployment configs
-├── docs/                 # Architecture, API, deployment docs
-├── .github/workflows/    # CI/CD pipelines
+├── backend/ # FastAPI application
+│ ├── app/
+│ │ ├── api/v1/ # Route handlers
+│ │ ├── core/ # Config, security, logging
+│ │ ├── models/ # SQLAlchemy ORM models
+│ │ ├── schemas/ # Pydantic request/response models
+│ │ ├── services/ # Business logic
+│ │ ├── repositories/ # Data access layer
+│ │ ├── ingestion/ # Document parsing & chunking
+│ │ ├── retrieval/ # Hybrid search, RRF, re-ranking
+│ │ ├── evaluation/ # RAGAS / DeepEval pipelines
+│ │ └── utils/
+│ ├── alembic/ # DB migrations
+│ └── tests/ # unit / integration / api / evaluation
+├── frontend/ # Next.js application
+│ └── src/
+│ ├── app/ # App Router pages
+│ ├── components/ # UI components
+│ ├── lib/ # API client, utils
+│ ├── hooks/ # Custom React hooks
+│ ├── types/ # Shared TypeScript types
+│ └── styles/
+├── deployment/ # Platform-specific deployment configs
+├── docs/ # Architecture, API, deployment docs
+├── .github/workflows/ # CI/CD pipelines
 └── docker-compose.yml
-```
 
-## Getting Started
+## Getting Started (Local Development)
 
 ```bash
 cp .env.example .env         # fill in secrets
@@ -83,9 +91,9 @@ This project is being built incrementally, feature by feature:
 2. ✅ Backend core: config, auth (JWT), protected routes
 3. ✅ Document ingestion: upload, chunking, embeddings, FAISS/BM25 indexing
 4. ✅ Hybrid retrieval + RAG chat endpoint (streaming, citations)
-4. ✅ Hybrid retrieval + RAG chat endpoint (streaming, citations)
 5. ✅ Frontend: landing page → dashboard → chat UI
 6. ✅ Analytics, evaluation pipeline, tests, CI/CD, docs
+7. ✅ Production deployment: Render (backend), Vercel (frontend), Neon (Postgres), Upstash (Redis)
 
 See `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/INSTALLATION.md`, `docs/ENVIRONMENT_VARIABLES.md`, `docs/DEPLOYMENT.md`, and `docs/TROUBLESHOOTING.md` for details on each.
 
@@ -107,7 +115,7 @@ See `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/INSTALLATION.md`, `docs/ENVIRON
               Chunking
                   │
                   ▼
-            Embeddings
+       Gemini Embeddings
                   │
           ┌───────┴────────┐
           ▼                ▼
@@ -119,7 +127,7 @@ See `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/INSTALLATION.md`, `docs/ENVIRON
         Reciprocal Rank Fusion
                   │
                   ▼
-       Cross-Encoder Reranking
+        Cohere Reranking
                   │
                   ▼
           Context Selection
@@ -128,7 +136,7 @@ See `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/INSTALLATION.md`, `docs/ENVIRON
           Prompt Construction
                   │
                   ▼
-        Ollama + Llama 3.2
+           Groq (Llama 3.x)
                   │
                   ▼
         Citation Validation
@@ -176,58 +184,46 @@ Vector-based semantic retrieval for:
 * Natural-language questions
 * Semantic relationships
 
+Embeddings are generated using **Google Gemini** (`gemini-embedding-001`).
+
 The results are combined using **Reciprocal Rank Fusion (RRF)**.
 
 ---
 
-## 🎯 Cross-Encoder Reranking
+## 🎯 Reranking (Cohere)
 
 Initial retrieval can return multiple potentially relevant chunks.
 
-A Cross-Encoder evaluates the relationship between the query and retrieved chunks and assigns relevance scores.
+A hosted reranker (Cohere `rerank-v3.5`) evaluates the relationship between the query and each retrieved chunk and assigns a relevance score, avoiding the need to load a local cross-encoder model on a memory-constrained deployment.
 
 ```text
 Query
   +
-Retrieved Chunk
+Retrieved Chunks
        │
        ▼
-Cross Encoder
+Cohere Rerank API
        │
        ▼
-Relevance Score
+Relevance Scores
 ```
 
-The highest-quality chunks are then passed to the LLM.
-
-Recommended model:
-
-```text
-cross-encoder/ms-marco-MiniLM-L-6-v2
-```
+The highest-quality chunks are then passed to the LLM. If the Cohere API is unavailable or the API key is missing, retrieval falls back gracefully to the original RRF-fused order rather than failing the request.
 
 ---
 
 # 🤖 LLM Generation
 
-The project supports local LLM inference using **Ollama**.
-
-Recommended development model:
-
-```text
-Llama 3.2
-```
-
-Ollama acts as the local inference runtime, while Llama 3.2 performs the actual natural-language generation.
+The deployed app uses the **Groq API** for fast LLM inference (Llama 3.x models). Local development can alternatively use **Ollama** for fully offline generation — see `docs/ENVIRONMENT_VARIABLES.md` for switching providers via `LLM_PROVIDER`.
 
 ```text
 FastAPI
    │
    ▼
-Ollama
+Groq API
    │
    ▼
-Llama 3.2
+Llama 3.x
    │
    ▼
 Generated Answer
@@ -266,7 +262,7 @@ Chunk Overlap:  200
 
 ### 5. Embedding Generation
 
-Each chunk is converted into a numerical vector using an embedding model.
+Each chunk is converted into a numerical vector using Google Gemini's embedding model.
 
 ### 6. Vector Indexing
 
@@ -278,23 +274,23 @@ Document chunks are also indexed using BM25 for lexical retrieval.
 
 ### 8. Hybrid Retrieval
 
-BM25 and vector retrieval are combined.
+BM25 and vector retrieval are combined using Reciprocal Rank Fusion.
 
 ### 9. Reranking
 
-A Cross-Encoder reranks the retrieved candidates.
+Cohere's hosted reranker (`rerank-v3.5`) re-scores the retrieved candidates.
 
 ### 10. Prompt Construction
 
-The highest-quality chunks are inserted into a grounded prompt.
+The highest-quality chunks are inserted into a grounded prompt, with an explicit citation-format instruction.
 
 ### 11. LLM Generation
 
-Llama 3.2 generates the final response through Ollama.
+Groq (Llama 3.x) generates the final response.
 
 ### 12. Citation Enforcement
 
-The response is linked back to the source document and relevant page/chunk metadata.
+The response is parsed for citation markers (`[1]`, `[2]`, etc.) and linked back to the source document, page, and chunk metadata. Citations referencing a chunk not actually provided as context are flagged as invalid rather than silently trusted.
 
 ---
 
@@ -333,6 +329,8 @@ Token-aware processing can be used to ensure chunks remain within model context 
 # 📌 Citation System
 
 AskMyDocs is designed to provide traceable answers.
+
+Every factual claim in a generated response is required to carry an inline citation marker (e.g. `[1]`, `[2]`) referencing the excerpt it came from. These markers are parsed out of the response and cross-checked against the chunks actually sent to the LLM as context — a citation number that doesn't correspond to a real provided chunk is flagged as invalid rather than shown as-is.
 
 A response can include:
 
@@ -418,26 +416,27 @@ pytest-cov
              ┌─────────┴─────────┐
              ▼                   ▼
        PostgreSQL              Redis
+        (Neon)               (Upstash)
              │                   │
              └─────────┬─────────┘
                        ▼
 ┌──────────────────────────────────────────────┐
 │              RAG Pipeline                    │
 │                                              │
-│ Extraction → Chunking → Embeddings           │
+│ Extraction → Chunking → Gemini Embeddings    │
 │                                              │
 │ BM25 ───────────────┐                        │
 │                     ├─→ Hybrid Retrieval     │
 │ FAISS ──────────────┘                        │
 │                       │                      │
 │                       ▼                      │
-│                Cross Encoder                 │
+│                Cohere Rerank                 │
 │                       │                      │
 │                       ▼                      │
 │                 Prompt Builder               │
 │                       │                      │
 │                       ▼                      │
-│               Ollama / Llama 3.2            │
+│              Groq (Llama 3.x)                │
 │                       │                      │
 │                       ▼                      │
 │              Citation Validation             │
@@ -446,9 +445,7 @@ pytest-cov
 
 ---
 
-
-
-### getting started
+### getting started (local development)
 
 # 1. Clone the Repository
 
@@ -494,27 +491,49 @@ Create:
 .env
 ```
 
-Example:
+Example (local development, using Ollama for generation):
 
 ```env
 APP_ENV=development
 
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/askmydocs
-
 REDIS_URL=redis://localhost:6379
 
+LLM_PROVIDER=ollama
 OLLAMA_BASE_URL=http://localhost:11434
-
 OLLAMA_MODEL=llama3.2
 
-SECRET_KEY=change-this-in-production
+EMBEDDING_PROVIDER=gemini
+GEMINI_API_KEY=
+
+COHERE_API_KEY=
+
+JWT_SECRET_KEY=change-this-in-production
+
+CORS_ORIGINS=http://localhost:3000
+FRONTEND_URL=http://localhost:3000
 ```
 
-Never commit real API keys, passwords, or secrets.
+Production (Render) uses the same variable names, swapping in hosted providers instead of local ones:
+
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Neon Postgres connection string |
+| `REDIS_URL` | Upstash Redis connection string |
+| `LLM_PROVIDER` | `groq` in production |
+| `GROQ_API_KEY` / `GROQ_MODEL` | Groq API key and model name for generation |
+| `EMBEDDING_PROVIDER` | `gemini` — used for embeddings |
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `COHERE_API_KEY` | Cohere rerank API key |
+| `JWT_SECRET_KEY` | Auth token signing secret |
+| `CORS_ORIGINS` | Allowed origin(s) for the frontend |
+| `FRONTEND_URL` | Deployed frontend URL (Vercel) |
+
+Never commit real API keys, passwords, or secrets. See `docs/ENVIRONMENT_VARIABLES.md` for the full reference.
 
 ---
 
-# 4. Start Ollama
+# 4. Start Ollama (local dev only)
 
 Start the Ollama service:
 
@@ -628,6 +647,24 @@ docker compose down
 
 ---
 
+# ☁️ Production Deployment
+
+The live deployment (see [Live Demo](#live-demo) above) runs across four managed platforms:
+
+| Component | Platform | Notes |
+|---|---|---|
+| Backend (FastAPI) | Render | Web service, auto-deploys on push to `main` |
+| Frontend (Next.js) | Vercel | Auto-deploys on push to `main` |
+| Database | Neon | Managed serverless Postgres |
+| Cache | Upstash | Managed serverless Redis |
+| Embeddings | Google Gemini | `gemini-embedding-001` |
+| Reranking | Cohere | `rerank-v3.5`, with graceful fallback to RRF order if unavailable |
+| LLM Generation | Groq | Fast Llama 3.x inference |
+
+See `docs/DEPLOYMENT.md` for step-by-step deployment instructions.
+
+---
+
 # 🔐 Security
 
 The application is designed with security considerations including:
@@ -649,7 +686,7 @@ Production deployments should additionally use HTTPS, secure secret management, 
 
 Planned enhancements include:
 
-* [ ] Streaming LLM responses
+* [x] Streaming LLM responses
 * [ ] Multi-user workspaces
 * [ ] Role-Based Access Control
 * [ ] Multi-document conversations
@@ -662,7 +699,7 @@ Planned enhancements include:
 * [ ] Qdrant/Weaviate integration
 * [ ] Observability with OpenTelemetry
 * [ ] Prometheus metrics
-* [ ] Cloud deployment
+* [x] Cloud deployment
 * [ ] Automated benchmark datasets
 * [ ] Model comparison dashboard
 
@@ -696,11 +733,9 @@ Frontend Engineering
 DevOps
 ```
 
-It is designed to demonstrate how modern RAG systems can be built with production-oriented engineering practices.
+It is designed to demonstrate how modern RAG systems can be built with production-oriented engineering practices, and deployed on real managed infrastructure.
 
 ---
-
-
 
 # 🧪 Example Query
 
@@ -713,11 +748,11 @@ It is designed to demonstrate how modern RAG systems can be built with productio
 ```text
 BM25
   +
-FAISS
+FAISS (Gemini embeddings)
   ↓
 Hybrid Results
   ↓
-Cross-Encoder
+Cohere Rerank
 ```
 
 **Context:**
@@ -730,12 +765,12 @@ days per calendar year.
 **LLM:**
 
 ```text
-Llama 3.2
+Groq (Llama 3.x)
 ```
 
 **Response:**
 
-> Employees are entitled to 20 annual leave days per calendar year.
+> Employees are entitled to 20 annual leave days per calendar year. [1]
 
 **Citation:**
 
@@ -745,7 +780,6 @@ Page: 18
 ```
 
 ---
-
 
 # 🤝 Contributing
 
